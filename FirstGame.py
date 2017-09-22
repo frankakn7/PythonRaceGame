@@ -11,7 +11,7 @@ black = (0,0,0)
 white = (255,255,255)
 red = (255,0,0)
 
-crashed = False
+#crashed = False
 
 gameDisplay = pygame.display.set_mode((display_width,display_height))
 pygame.display.set_caption("A bit Racey")
@@ -19,23 +19,55 @@ clock = pygame.time.Clock()
 
 myFont = pygame.font.Font(None, 40)
 
-carImg = pygame.image.load('/Volumes/MBoss/Code/Python/RaceCare.png')
+carImg = pygame.image.load('/Volumes/MBoss/Code/Python/PythonRaceGame/RaceCare.png')
 carImg = pygame.transform.scale(carImg, (50,75))
 
-back1Img = pygame.image.load('/Volumes/MBoss/Code/Python/Background1.png')
-back2Img = pygame.image.load('/Volumes/MBoss/Code/Python/Background2.png')
-back3Img = pygame.image.load('/Volumes/MBoss/Code/Python/Background3.png')
+back1Img = pygame.image.load('/Volumes/MBoss/Code/Python/PythonRaceGame/Background1.png')
+back2Img = pygame.image.load('/Volumes/MBoss/Code/Python/PythonRaceGame/Background2.png')
+back3Img = pygame.image.load('/Volumes/MBoss/Code/Python/PythonRaceGame/Background3.png')
 
 class playerCar:
 	def createVariables(self,x,y):
 		self.x = x
 		self.y = y
+		self.spdX = 0;
+		self.spdY = 0;
 		self.width = 50
 		self.height = 75
 		self.spd = 5
 		self.img = carImg
+		self.crashed = False
 	def draw(self):
 		gameDisplay.blit(self.img,(self.x,self.y))
+	def keyDetect(self):
+		if LeftKeyDown:
+			self.spdX = -7
+		elif RightKeyDown:
+			self.spdX = 7
+		else:
+			self.spdX = 0
+	
+		if UpKeyDown:
+			self.spdY = -7
+		elif DownKeyDown:
+			self.spdY = 7
+		else:
+			self.spdY = 0
+	def move(self):
+		self.keyDetect()
+		self.x += self.spdX
+		#self.y += self.Yspd
+
+		if self.y + self.height <= display_height and self.y >= 0:
+			self.y += self.spdY
+		else:
+			self.y -= self.spdY * 2
+
+		if self.x + self.width  <= 0:
+			self.x = display_width - self.width
+		elif self.x >= display_width:
+			self.x = 0 
+		self.draw()
 
 class enemyCar:
 	def createVariables(self,lane):
@@ -55,26 +87,21 @@ class enemyCar:
 		if self.y >= display_height:
 			self.createVariables(self.lane)
 		if self.x <= obj.x + obj.width and obj.x <= self.x + self.width and self.y <= obj.y + obj.height and obj.y <= self.y + self.height:
-			print("Hello")
-			crashed = True
-			pygame.quit()
-			quit()
+			#print("Hello")
+			player.crashed = True
+			#print(crashed)
+			#pygame.quit()
+			#quit()
 
 cars = []
-
 for i in range(0,10):
 	cars.append(enemyCar())
 	cars[i].createVariables(i+1)
-
 x = (display_width * 0.45)
 y = (display_height * 0.7)
 
 player = playerCar()
 player.createVariables(x,y)
-
-
-x_change = 0
-y_change = 0
 
 LeftKeyDown = False
 RightKeyDown = False
@@ -84,6 +111,27 @@ DownKeyDown = False
 Number = 1;
 
 Score = 0;
+
+def restartAll():
+	cars = []
+	for i in range(0,10):
+		cars.append(enemyCar())
+		cars[i].createVariables(i+1)
+	x = (display_width * 0.45)
+	y = (display_height * 0.7)
+
+	player = playerCar()
+	player.createVariables(x,y)
+
+	LeftKeyDown = False
+	RightKeyDown = False
+	UpKeyDown = False
+	DownKeyDown = False
+
+	Number = 1;
+
+	Score = 0;
+
 scoreOutput = myFont.render("Score: "+str(Score), 1, black)
 
 def drawBackground():
@@ -98,7 +146,8 @@ def drawBackground():
 		gameDisplay.blit(back3Img,(0,0))
 		Number += 1
 
-while not crashed:
+while player.crashed == False:
+	#print(crashed)
 	for event in pygame.event.get():
 		if event.type == pygame.QUIT:
 			crashed = True
@@ -128,44 +177,23 @@ while not crashed:
 			if event.key == pygame.K_DOWN:
 				DownKeyDown = False
 
-	if LeftKeyDown:
-		x_change = -7
-	elif RightKeyDown:
-		x_change = 7
-	else:
-		x_change = 0
-	
-	if UpKeyDown:
-		y_change = -7
-	elif DownKeyDown:
-		y_change = 7
-	else:
-		y_change = 0
-
-	player.x += x_change
-	
-	if player.y + player.height <= display_height and player.y >= 0:
-		player.y += y_change
-	else:
-		player.y -= y_change * 2
-
-	if player.x + player.width  <= 0:
-		player.x = display_width - player.width
-	elif player.x >= display_width:
-		player.x = 0 
-
 	#gameDisplay.fill(white)
 	drawBackground()
-	player.draw()
+	player.move()
 	for i in range(0,len(cars)):
 		cars[i].move()
 		cars[i].detect(player)
+		#if crashed == True:
+		#	print("Happened")
+		#	break;
 	#print(crashed)
 	Score += 1
 	scoreOutput = myFont.render("Score: "+str(Score), 1, black)
 	gameDisplay.blit(scoreOutput, ((display_width/2)-75,30))
 	pygame.display.update()
 	clock.tick(60)
+
+print("Player Crashed")
 
 pygame.quit()
 quit()
